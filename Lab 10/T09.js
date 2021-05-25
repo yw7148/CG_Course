@@ -1,5 +1,4 @@
 var gl;
-
 const {mat2, mat3, mat4, vec2, vec3, vec4} = glMatrix;  // Now we can use function without glMatrix.~~~
 
 function testGLError(functionLastCalled) {
@@ -13,13 +12,14 @@ function testGLError(functionLastCalled) {
     return true;
 }
 
-var viewRatio;
 function initialiseGL(canvas) {
     try {
         // Try to grab the standard context. If it fails, fallback to experimental
-        gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+        gl = canvas.getContext('webgl',
+			{stencil:true, alpha:true, depth:true, antialias:true, preserveDrawingBuffer:false});
+		//gl = canvas.getContext('webgl',
+		//	{stencil:true, alpha:true, depth:true, antialias:false, preserveDrawingBuffer:true});
         gl.viewport(0, 0, canvas.width, canvas.height);
-        viewRatio = canvas.width/canvas.height;
     }
     catch (e) {
     }
@@ -43,11 +43,11 @@ var vertexData = [
          0.5,  0.5, -0.5,  1.0, 1.0, 1.0, 1.0, 
 		// Front (BLUE/WHITE) -> z = 0.5
         -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
-         0.5,  0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
          0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
+		 0.5,  0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
         -0.5, -0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
-        -0.5,  0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
          0.5,  0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 
+		 -0.5,  0.5,  0.5,  0.0, 0.0, 1.0, 1.0,
 		// LEFT (GREEN/WHITE) -> z = 0.5
         -0.5, -0.5, -0.5,  0.0, 1.0, 0.0, 1.0,
         -0.5,  0.5,  0.5,  0.0, 1.0, 0.0, 1.0,
@@ -57,18 +57,18 @@ var vertexData = [
         -0.5,  0.5,  0.5,  0.0, 1.0, 1.0, 1.0, 
 		// RIGHT (YELLOW/WHITE) -> z = 0.5
          0.5, -0.5, -0.5,  1.0, 1.0, 0.0, 1.0,
-         0.5,  0.5,  0.5,  1.0, 1.0, 0.0, 1.0,
          0.5,  0.5, -0.5,  1.0, 1.0, 0.0, 1.0,
+		 0.5,  0.5,  0.5,  1.0, 1.0, 0.0, 1.0,
          0.5, -0.5, -0.5,  1.0, 1.0, 0.0, 1.0,
-         0.5, -0.5,  0.5,  1.0, 1.0, 0.0, 1.0,
          0.5,  0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 
+		 0.5, -0.5,  0.5,  1.0, 1.0, 0.0, 1.0,
 		// BOTTON (MAGENTA/WHITE) -> z = 0.5
         -0.5, -0.5, -0.5,  1.0, 0.0, 1.0, 1.0,
-         0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 1.0,
          0.5, -0.5, -0.5,  1.0, 0.0, 1.0, 1.0,
+		 0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 1.0,
         -0.5, -0.5, -0.5,  1.0, 0.0, 1.0, 1.0,
-        -0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 1.0,
          0.5, -0.5,  0.5,  1.0, 1.0, 1.0, 1.0, 
+		 -0.5, -0.5,  0.5,  1.0, 0.0, 1.0, 1.0,
 		// TOP (CYAN/WHITE) -> z = 0.5
         -0.5,  0.5, -0.5,  0.0, 1.0, 1.0, 1.0,
          0.5,  0.5,  0.5,  0.0, 1.0, 1.0, 1.0,
@@ -109,10 +109,9 @@ function initialiseShaders() {
     var vertexShaderSource = `
 			attribute highp vec4 myVertex; 
 			attribute highp vec4 myColor; 
-			uniform mediump mat4 mMat;
-            uniform mediump mat4 vMat;
-            uniform mediump mat4 pMat;
-
+			uniform mediump mat4 mMat; 
+			uniform mediump mat4 vMat; 
+			uniform mediump mat4 pMat; 
 			varying  highp vec4 col;
 			void main(void)  
 			{ 
@@ -156,14 +155,11 @@ var yRot = 0.0;
 var zRot = 0.0;
 var speedRot = 0.01; 
 
-flag_animation = 0; 
-function toggleAnimation()
-{
-	flag_animation ^= 1; 
-	console.log("flag_animation=", flag_animation);
-}
+var flag_animation = 0; 
+var flag_draw_twice = 0; 
+var flag_draw_stencil = 0; 
 
-function speed_scale(a)
+function fn_speed_scale(a)
 {
 	speedRot *= a; 
 }
@@ -175,48 +171,95 @@ function fn_draw_mode(a)
 	draw_mode = a;
 }
 
-var fov = 90;
-function fn_update_fov(a)
+var fov_degree = 90.0; 
+function fn_update_fov(val)
 {
-    fov = a;
+	document.getElementById('textFOV').value=val; 
+	fov_degree = val; 
 }
 
-var pMat;
-var vMat;
-var mMat;
+function fn_toggle(mode)
+{
+	if (gl.isEnabled(mode))
+		gl.disable(mode);
+	else
+		gl.enable(mode); 
+}
+
+function fn_cull_mode(val)
+{
+	gl.cullFace(val);
+}
+
+function fn_scissor()
+{
+	gl.scissor(document.getElementById('scissorx').value, document.getElementById('scissory').value,
+	document.getElementById('scissorw').value,document.getElementById('scissorh').value);
+}
+
+
+function fn_polygonOffset()
+{
+	gl.polygonOffset(document.getElementById('offset_f').value,document.getElementById('offset_u').value);
+}
+
+function fn_depth_mode(val)
+{
+	gl.depthFunc(val);
+}
+
+var mMat, vMat, pMat; 
+var depth_clear_value = 1.0; 
+
+function fn_make_clear_stencil()
+{
+	gl.enable(gl.STENCIL_TEST);
+	gl.stencilMask(0xFF); 
+	gl.clearStencil(0); 
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.clearStencil(1); 
+	gl.enable(gl.SCISSOR_TEST); 
+	gl.scissor(400, 300, 100, 100); 
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.scissor(300, 200, 100, 100); 
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.stencilFunc(gl.EQUAL, 1, 255); 
+	gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); 
+	gl.disable(gl.SCISSOR_TEST); 
+}
 
 function renderScene() {
-
+	
+	// fn_make_clear_stencil();
+	
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	gl.clearDepth(1);										// Added for depth Test 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);	// Added for depth Test 
-	gl.enable(gl.DEPTH_TEST);								// Added for depth Test 
-
-    var mmatrixLocation = gl.getUniformLocation(gl.programObject, "mMat");
-    var vmatrixLocation = gl.getUniformLocation(gl.programObject, "vMat");
-    var pmatrixLocation = gl.getUniformLocation(gl.programObject, "pMat");
-    mMat = mat4.create();
-    vMat = mat4.create(); 
+	gl.clearDepth(depth_clear_value);											// Added for depth Test 
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);	// Added for depth Test 
+	
+    var mMatLocation = gl.getUniformLocation(gl.programObject, "mMat");
+	var vMatLocation = gl.getUniformLocation(gl.programObject, "vMat");
+	var pMatLocation = gl.getUniformLocation(gl.programObject, "pMat");
     pMat = mat4.create(); 
-	// mat4.ortho(transformationMatrix, -1, 1, -1, 1, 1, -1); 
-	// console.log(transformationMatrix);
+	vMat = mat4.create(); 
+	mMat = mat4.create(); 
+	// mat4.ortho(pMat, -1, 1, -1, 1, -1, 1); 
+	// mat4.frustum(pMat, -8.0/6.0, 8.0/6.0, -1, 1, 1, ); 
+	mat4.perspective(pMat, fov_degree * 3.141592 / 180.0 , 8.0/6.0 , 0.5, 6); 
+	mat4.lookAt(vMat, [0,0,2], [0.0 ,0.0, 0.0], [0,1,0]);
 	mat4.rotateX(mMat, mMat, xRot);
 	mat4.rotateY(mMat, mMat, yRot);
 	mat4.rotateZ(mMat, mMat, zRot);
-
-    mat4.perspective(pMat, fov, viewRatio, 0.1, 10.0);
-    mat4.lookAt(vMat, [0, 2, 2], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 	
 	if (flag_animation == 1)
 	{
 		//xRot = xRot + speedRot;	
 		yRot = yRot + speedRot;	
-		// zRot = zRot + speedRot;	
+		zRot = zRot + 2 * speedRot;	
     }
-	gl.uniformMatrix4fv(mmatrixLocation, gl.FALSE, mMat );
-    gl.uniformMatrix4fv(vmatrixLocation, gl.FALSE, vMat );
-    gl.uniformMatrix4fv(pmatrixLocation, gl.FALSE, pMat );
-
+	
+	gl.uniformMatrix4fv(mMatLocation, gl.FALSE, mMat );
+	gl.uniformMatrix4fv(vMatLocation, gl.FALSE, vMat );
+	gl.uniformMatrix4fv(pMatLocation, gl.FALSE, pMat );
 
     if (!testGLError("gl.uniformMatrix4fv")) {
         return false;
@@ -231,14 +274,36 @@ function renderScene() {
     if (!testGLError("gl.vertexAttribPointer")) {
         return false;
     }
-
+	
+	if ( flag_draw_stencil ) {
+		gl.enable(gl.STENCIL_TEST);
+		gl.stencilMask(0xFF); 
+		gl.clearStencil(0); 
+		gl.clear(gl.STENCIL_BUFFER_BIT);
+		gl.stencilFunc(gl.ALWAYS, 1, 255); 
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE); 
+		gl.colorMask(false, false, false, false); 
+		gl.drawArrays(draw_mode, 0, 6); 
+		gl.stencilFunc(gl.EQUAL, 1, 255); 
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); 
+		gl.colorMask(true, true, true, true); 
+	}
+	
+	
 	gl.drawArrays(draw_mode, 0, 36); 
-	var saveMat = mat4.create();
-
+	
+	if ( flag_draw_twice ) {
+		gl.enable(gl.POLYGON_OFFSET_FILL);
+		mat4.translate(mMat, mMat, [0.000, 0.00, 0.0]);
+		mat4.rotateY(mMat, mMat, 3.141592/2.0);
+		gl.uniformMatrix4fv(mMatLocation, gl.FALSE, mMat );
+		gl.drawArrays(draw_mode, 0, 36); 
+		gl.disable(gl.POLYGON_OFFSET_FILL);
+	}
+	
     if (!testGLError("gl.drawArrays")) {
         return false;
     }
-
     return true;
 }
 
@@ -256,9 +321,11 @@ function main() {
     if (!initialiseShaders()) {
         return;
     }
-
-	// renderScene();
-    // Render loop
+	
+	//fn_capture_stencil();
+	//renderScene();
+	//fn_make_clear_stencil();
+	
     requestAnimFrame = (function () {
         return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
 			function (callback) {

@@ -2,7 +2,8 @@
 
 Make Boxes at random place and Find with mouse drag, wheel and keyboard!
 
-
+![farimag](./READMEIMG/img_far.png)
+![closeimag](./READMEIMG/img_close.png)
 ## Introduction
 > This is summary of the contents in this document.
 
@@ -274,6 +275,7 @@ When user wants to go back to the initial state, user can reset the canvas by do
 - https://hianna.tistory.com/454 - random number
 - https://webdir.tistory.com/31 - html align
 - https://studiomeal.com/archives/533 - html grid
+- https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=chandong83&logNo=220812226888 - README.md image
 
 ### Source(Image) reference
 - https://www.ajou.ac.kr/kr/intro/uidownload.do  - ajou univ logo -> png to base64 (https://onlinepngtools.com/convert-png-to-base64)

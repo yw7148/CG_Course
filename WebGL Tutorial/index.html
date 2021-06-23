@@ -1,0 +1,48 @@
+<html>
+
+<head>
+<title>Youngwon Final Project</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript" src="gl-matrix.js"> </script>
+<script type="text/javascript" src="script.js"> </script>
+
+</head>
+
+<body style ="width: 1920px"onload="main()" onkeydown="cameramove(event);">
+    <h1 style="text-align: center; margin: 20px 0px 20px 0px;">Youngwon's Project</h1>
+	
+    <div style = "display: grid; grid-template-columns:1fr 3fr 1fr; margin: auto">
+        <div style="border: 5px solid grey; margin-left: auto; padding: 30px;">
+            <h2 style="text-align: center; margin-top: 20px;">Information</h2>
+            <p>This is random box generator with mouse rotate & zoom </p>
+            <h2 style="text-align: center; margin-top: 50px;">User Guide</h2>
+            <p>1. Select a Texture you prefer</p>
+            <p>2. Generate a box at random space.</p>
+            <p>3. Find the box by rotating and zooming with your mouse.</p>
+            <p>4. You can also move the camera back('s') and front('w') with your keyboard.</p>
+            <p>5. You can double-click to reset.</p>
+            <h2 style="text-align: center; margin-Top: 50px;">More Infos</h2>
+            <p>1. You can remove the center box with radio button.</p>
+            <p>2. You can generate more than 1 box.</p>
+            <p>3. you can limit box generation range.</p>
+            <p>4. mouse drag to rotate & mouse scroll to zoom</p>
+        </div>
+        <canvas id="helloapicanvas" style="border: 5px solid red; margin-left: auto " width="1200" height="800" 
+                onmousemove="rotate(event);" onmousedown="startRotate(event);" ondblclick="reset();" onwheel="zoom(event);" oncontextmenu="return false"></canvas>
+        <div style="border: 5px solid grey; margin-right: auto; padding: 30px;">
+            <h2 style="text-align: center; margin-bottom: 10px;">Controller</h2>
+            <h4 style="text-align: center; margin-top: 10px;"><u>Texture Selecter</u></h4>
+            <div><input type="radio" name="texture_radio" onclick="imageChange(0);" checked = "true">Ajou Default</input></div><img id = "ajou_def_img">
+            <div><input type="radio" name="texture_radio" onclick="imageChange(1);">Ajou Black</input></div><img id = "ajou_black_img">
+            <div><input type="radio" name="texture_radio" onclick="imageChange(2);">Ajou Black Background</input></div><img id = "ajou_black_bg_img">
+            <h4 style="text-align: center; margin-top: 10px;"><u>Random Box Generator</u></h4>
+            <div style="text-align: center;"><button style="font-size: 25px;"type="button" onclick="generateBox()">Generate</button></div>
+            <div style="margin-top: 20px">generation range</div>
+            <div style="margin-bottom: 10px;"><input style="width:200px" id="boxgen_range" type="range" min="5" max="50" value="10" oninput="update_range(this.value);"></div>
+            <input type="radio" name="centerBox_radio" id = "centerBox_def" onclick="update_centerbox(true);" checked = "true">CenterBox</input> <input type="radio" name="centerBox_radio" onclick="update_centerbox(false);">Remove</input>
+
+        </div>
+    </div>
+</body>
+
+</html>
